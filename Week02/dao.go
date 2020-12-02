@@ -30,7 +30,7 @@ type UserInfo struct {
 	Gender bool
 }
 
-func getUserFromDB(userID int64) (*UserInfo, error) {
+func GetUserFromDB(userID int64) (*UserInfo, error) {
 	userInfo := new(UserInfo)
 	db := h.Slave()
 	result := db.Table("user_info").Where("id = ?", userID).Scan(&userInfo)
