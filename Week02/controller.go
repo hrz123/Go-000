@@ -18,7 +18,7 @@ func GetUserInfo(c *gin.Context) {
 	if err != nil {
 		logs.Error("param user id cannot be parsed")
 		c.JSON(http.StatusOK, &Response{
-			Code:    0,
+			Code:    1,
 			Message: "user id 参数错误",
 			Data:    nil,
 		})
@@ -28,7 +28,7 @@ func GetUserInfo(c *gin.Context) {
 	if err != nil {
 		logs.Error("get user info from DB error %+v", err)
 		c.JSON(http.StatusOK, &Response{
-			Code:    0,
+			Code:    1,
 			Message: "get user info from db error",
 			Data:    nil,
 		})
