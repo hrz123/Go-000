@@ -2,23 +2,40 @@ package Week02
 
 import (
 	"code.byted.org/gopkg/logs"
-	"encoding/json"
+	"github.com/gin-gonic/gin"
 	"net/http"
 	"strconv"
 )
 
-func GetUserInfo(w http.ResponseWriter, r *http.Request) {
-	userID, err := strconv.Atoi(r.Form["user_id"][0])
+type Response struct {
+	Code    int32
+	Message string
+	Data    interface{}
+}
+
+func GetUserInfo(c *gin.Context) {
+	userID, err := strconv.Atoi(c.Param("userID"))
 	if err != nil {
-		logs.Error("form value user id cannot be parsed")
+		logs.Error("param user id cannot be parsed")
+		c.JSON(http.StatusOK, &Response{
+			Code:    0,
+			Message: "user id 参数错误",
+			Data:    nil,
+		})
+		return
 	}
 	userInfo, err := DealWithUser(int64(userID))
 	if err != nil {
 		logs.Error("get user info from DB error %+v", err)
+		c.JSON(http.StatusOK, &Response{
+			Code:    0,
+			Message: "get user info from db error",
+			Data:    nil,
+		})
 	}
-	resp, err := json.Marshal(userInfo)
-	if err != nil {
-		logs.Error("json marshal error %+v", err)
-	}
-	_, _ = w.Write(resp)
+	c.JSON(200, &Response{
+		Code:    0,
+		Message: "success",
+		Data:    userInfo,
+	})
 }
