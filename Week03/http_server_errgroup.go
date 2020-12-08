@@ -14,7 +14,7 @@ func main() {
 	g, ctx := errgroup.WithContext(context.Background())
 
 	// 监听linux signal
-	c := make(chan os.Signal)
+	c := make(chan os.Signal, 1)
 
 	// create a server
 	server := &http.Server{
