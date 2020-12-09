@@ -2,7 +2,10 @@ package Week02
 
 import (
 	"code.byted.org/gopkg/logs"
+	"errors"
+	"fmt"
 	"github.com/gin-gonic/gin"
+	"github.com/hrz123/Go-000/Week02/code"
 	"net/http"
 	"strconv"
 )
@@ -14,6 +17,7 @@ type Response struct {
 }
 
 func GetUserInfo(c *gin.Context) {
+	fmt.Println(c.Param("userID"))
 	userID, err := strconv.Atoi(c.Param("userID"))
 	if err != nil {
 		logs.Error("param user id cannot be parsed")
@@ -26,12 +30,16 @@ func GetUserInfo(c *gin.Context) {
 	}
 	userInfo, err := DealWithUser(int64(userID))
 	if err != nil {
-		logs.Error("get user info from DB error %+v", err)
-		c.JSON(http.StatusOK, &Response{
-			Code:    1,
-			Message: "get user info from db error",
-			Data:    nil,
-		})
+		if errors.Is(err, code.NotFound) {
+			// dao层的错误
+			c.JSON(http.StatusOK, &Response{
+				Code:    1,
+				Message: "dao error",
+				Data:    nil,
+			})
+			return
+		}
+
 	}
 	c.JSON(200, &Response{
 		Code:    0,

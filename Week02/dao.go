@@ -1,7 +1,8 @@
 package Week02
 
 import (
-	"database/sql"
+	"fmt"
+	"github.com/hrz123/Go-000/Week02/code"
 	"github.com/jinzhu/gorm"
 	"github.com/pkg/errors"
 )
@@ -35,10 +36,8 @@ func GetUserFromDB(userID int64) (*UserInfo, error) {
 	db := h.Slave()
 	result := db.Table("user_info").Where("id = ?", userID).Scan(&userInfo)
 	if result.Error != nil {
-		if result.Error == sql.ErrNoRows {
-			return nil, errors.Wrapf(result.Error, "No Row found for user id %d", userID)
-		}
-		return nil, errors.Wrap(result.Error, "Other Dao error")
+		return nil, errors.Wrapf(code.NotFound, "sql: %s error: %v",
+			fmt.Sprintf("select table user_info where id = %d", userID), result.Error)
 	}
 	return userInfo, nil
 }
