@@ -37,7 +37,7 @@ func GetUserFromDB(userID int64) (*UserInfo, error) {
 	result := db.Table("user_info").Where("id = ?", userID).Scan(&userInfo)
 	if result.Error != nil {
 		return nil, errors.Wrapf(code.NotFound, "sql: %s error: %v",
-			fmt.Sprintf("select table user_info where id = %d", userID), result.Error)
+			fmt.Sprintf("select * from user_info where id = %d", userID), result.Error)
 	}
 	return userInfo, nil
 }

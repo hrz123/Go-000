@@ -39,7 +39,6 @@ func GetUserInfo(c *gin.Context) {
 			})
 			return
 		}
-
 	}
 	c.JSON(200, &Response{
 		Code:    0,
