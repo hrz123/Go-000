@@ -2,59 +2,65 @@ package main
 
 import (
 	"context"
+	"errors"
 	"golang.org/x/sync/errgroup"
 	"log"
 	"net/http"
 	"os"
 	"os/signal"
+	"syscall"
+	"time"
 )
 
 func main() {
 	// err group for safe exit
 	g, ctx := errgroup.WithContext(context.Background())
 
-	// 监听linux signal
-	c := make(chan os.Signal, 1)
-
-	// create a server
-	server := &http.Server{
-		Addr:    ":8001",
+	// create a svr
+	svr := &http.Server{
+		Addr:    ":8001", // port
 		Handler: nil,
 	}
 
-	// register a cleanup function
-	server.RegisterOnShutdown(func() {
-		log.Println("RegisterOnShutdown(): completed!")
-	})
+	// signal通信
+	sig := make(chan os.Signal, 1)
 
 	// 启动服务
 	g.Go(func() error {
-		err := server.ListenAndServe()
-		return err
+		go func() {
+			// 等待ctx取消或者收到signal，就要关掉svr
+			select {
+			case <-ctx.Done():
+				log.Println("http ctx done")
+			case <-sig:
+				log.Println("get shutdown signal")
+			}
+			svr.Shutdown(context.TODO())
+		}()
+		return svr.ListenAndServe()
 	})
-	log.Println("Server started.")
 
 	// 监听linux signal
 	g.Go(func() error {
-		signal.Notify(c, os.Interrupt)
+		exitSignals := []os.Signal{os.Interrupt, syscall.SIGTERM, syscall.SIGQUIT, syscall.SIGINT}
+		// 监听linux的signal
+		signal.Notify(sig, exitSignals...)
+		select {
+		case <-ctx.Done():
+			log.Println("sig ctx down")
+		}
 		return nil
 	})
 
-	// 等待监听到linux signal
-	osCall := <-c
-	// get signal
-	log.Printf("signal %+v", osCall)
+	// 注入错误
+	g.Go(func() error {
+		log.Println("inject")
+		time.Sleep(time.Second * 3)
+		log.Println("inject finish")
+		return errors.New("inject error")
+	})
 
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-
-	// 关闭服务器
-	server.Shutdown(ctx)
-
-	if err := g.Wait(); err != nil && err != http.ErrServerClosed {
-		log.Printf("server start failed or server shutdown failed: %+v", err)
-	} else {
-		log.Printf("server shutdown properly")
-	}
+	err := g.Wait() // first error return
+	log.Println(err)
 
 }
