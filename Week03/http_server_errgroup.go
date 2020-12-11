@@ -45,10 +45,6 @@ func main() {
 		exitSignals := []os.Signal{os.Interrupt, syscall.SIGTERM, syscall.SIGQUIT, syscall.SIGINT}
 		// 监听linux的signal
 		signal.Notify(sig, exitSignals...)
-		select {
-		case <-ctx.Done():
-			log.Println("sig ctx down")
-		}
 		return nil
 	})
 
